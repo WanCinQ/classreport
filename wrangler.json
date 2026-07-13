@@ -6,13 +6,13 @@
     {
       "binding": "DB",
       "database_name": "hualian-reports-db",
-      "database_id": "YOUR_D1_DATABASE_ID_HERE",
+      "database_id": "98f5e834-31de-48bd-956a-5694c3e466b8",
       "migrations_dir": "migrations"
     }
   ],
   "vars": {
-    "CORS_ORIGIN": "http://localhost:8000",
-    "PARENT_BASE_URL": "http://localhost:8000/parent.html",
+    "CORS_ORIGIN": "https://pandapooh0921.github.io",
+    "PARENT_BASE_URL": "https://pandapooh0921.github.io/classreport/parent.html",
     "SESSION_DURATION_DAYS": "7"
   }
 }
