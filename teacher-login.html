@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="site.title">华联中学 - 学生评语系统</title>
+  
+  <!-- Pico.css v2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <!-- Google Fonts Outfit & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Premium Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom Style overrides -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-bg">
+  <main class="container" style="max-width: 480px;">
+    
+    <!-- Top Lang Switcher -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;" class="lang-switcher">
+      <button onclick="setLang('zh')" id="lang-btn-zh">中</button>
+      <button onclick="setLang('en')" id="lang-btn-en">EN</button>
+      <button onclick="setLang('ms')" id="lang-btn-ms">BM</button>
+    </div>
+
+    <!-- Login Card -->
+    <article class="premium-card">
+      <header style="text-align: center; border-bottom: none; padding-bottom: 0;">
+        <i class="fa-solid fa-graduation-cap" style="font-size: 3rem; color: var(--pico-primary); margin-bottom: 0.5rem;"></i>
+        <h2 data-i18n="login.title" style="margin-bottom: 0.5rem; font-weight: 800;">教师登录</h2>
+        <p data-i18n="login.subtitle" style="font-size: 0.85rem; color: #718096;">多教师协作学生评语录入系统</p>
+      </header>
+
+      <form id="login-form">
+        <!-- Error Alert -->
+        <div id="error-alert" style="display: none; padding: 0.75rem; border-radius: 8px; background: #fee2e2; color: #b91c1c; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid #fca5a5;">
+          <i class="fa-solid fa-triangle-exclamation"></i> <span id="error-msg"></span>
+        </div>
+
+        <label for="username">
+          <span data-i18n="login.username">用户名</span>
+          <input type="text" id="username" autocomplete="username" required>
+        </label>
+
+        <label for="password">
+          <span data-i18n="login.password">密码</span>
+          <input type="password" id="password" autocomplete="current-password" required>
+        </label>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <label for="remember" style="margin-bottom: 0; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="remember" style="margin-bottom: 0;">
+            <span style="font-size: 0.85rem;">记住我 / Remember Me</span>
+          </label>
+          
+          <!-- Backend URL Settings Gear -->
+          <a href="#" onclick="toggleSettings()" style="font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+            <i class="fa-solid fa-gear"></i> Backend URL
+          </a>
+        </div>
+
+        <!-- Hidden Worker URL Settings Panel -->
+        <div id="settings-panel" style="display: none; padding: 0.75rem; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+          <label for="worker-url" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">Cloudflare Worker API URL:</label>
+          <input type="url" id="worker-url" style="font-size: 0.8rem; margin-bottom: 0.5rem;" placeholder="https://your-worker.workers.dev">
+          <button type="button" class="secondary" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;" onclick="saveSettings()">保存设置 / Save</button>
+        </div>
+
+        <button type="submit" id="submit-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="login.button">登录</span>
+        </button>
+      </form>
+    </article>
+
+    <footer style="text-align: center; font-size: 0.8rem; color: #718096; margin-top: 1rem;" data-i18n="login.footer">
+      © 2026 华联中学 · Hua Lian High School
+    </footer>
+  </main>
+
+  <!-- JS Modules -->
+  <script src="js/auth.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/report-api.js"></script>
+  <script>
+    // Set UI active language button on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeLang = getLang();
+      document.querySelectorAll('.lang-switcher button').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('lang-btn-' + activeLang);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Prep settings input
+      document.getElementById('worker-url').value = WORKER_URL;
+      
+      // Auto redirect if already logged in
+      if (getToken() && getUser()) {
+        redirectToDashboard();
+      }
+    });
+
+    // Listen to lang changes to toggle active button state
+    document.addEventListener('langChanged', (e) => {
+      document.querySelectorAll('.lang-switcher button').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('lang-btn-' + e.detail.lang);
+      if (activeBtn) activeBtn.classList.add('active');
+    });
+
+    function toggleSettings() {
+      const panel = document.getElementById('settings-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveSettings() {
+      const url = document.getElementById('worker-url').value;
+      if (url) {
+        setWorkerUrl(url);
+        alert('API 接口地址更新成功！\nAPI URL updated successfully.');
+        document.getElementById('settings-panel').style.display = 'none';
+      }
+    }
+
+    function redirectToDashboard() {
+      const user = getUser();
+      if (user && user.role === 'form_teacher') {
+        window.location.href = 'form-teacher.html';
+      } else {
+        window.location.href = 'teacher-report.html';
+      }
+    }
+
+    // Handle Form Submit
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usernameInput = document.getElementById('username').value.trim();
+      const passwordInput = document.getElementById('password').value;
+      const rememberInput = document.getElementById('remember').checked;
+      const errorAlert = document.getElementById('error-alert');
+      const errorMsg = document.getElementById('error-msg');
+      const submitBtn = document.getElementById('submit-btn');
+
+      if (!usernameInput || !passwordInput) {
+        errorMsg.textContent = t('login.error.empty');
+        errorAlert.style.display = 'block';
+        return;
+      }
+
+      errorAlert.style.display = 'none';
+      submitBtn.setAttribute('aria-busy', 'true');
+      submitBtn.disabled = true;
+
+      try {
+        await ReportAPI.login(usernameInput, passwordInput, rememberInput);
+        redirectToDashboard();
+      } catch (err) {
+        errorMsg.textContent = err.message || '登录异常，请检查接口配置';
+        errorAlert.style.display = 'block';
+      } finally {
+        submitBtn.removeAttribute('aria-busy');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
