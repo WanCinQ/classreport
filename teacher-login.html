@@ -39,14 +39,20 @@
         </div>
 
         <label for="username">
-          <span data-i18n="login.username">用户名</span>
-          <input type="text" id="username" autocomplete="username" required>
+          <span data-i18n="login.username">选择账号</span>
+          <select id="username" required>
+            <option value="">-- 请选择账号 / Select Account --</option>
+          </select>
         </label>
 
         <label for="password">
           <span data-i18n="login.password">密码</span>
           <input type="password" id="password" autocomplete="current-password" required>
         </label>
+
+        <div style="font-size:0.75rem; color:#94a3b8; margin:-0.5rem 0 0.5rem 0;">
+          💡 班主任密码: <strong>2026</strong>　|　科任密码: <strong>1+科目码</strong> (如华文 1001)
+        </div>
 
         <label for="remember" style="margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
           <input type="checkbox" id="remember" style="margin-bottom: 0;">
@@ -67,14 +73,55 @@
   <!-- JS Modules -->
   <script src="js/auth.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
   <script src="js/report-api.js"></script>
   <script>
+    // Populate teacher dropdown from class-config.json
+    async function populateTeacherDropdown() {
+      const sel = document.getElementById('username');
+      try {
+        const cfg = await LocalData.loadConfig();
+        const teachers = cfg.teachers || [];
+        teachers.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.username;
+          const roleLabel = t.role === 'form_teacher' ? ' 👑班主任' : ' 📝科任';
+          opt.textContent = (t.name || t.username) + roleLabel + ' (' + t.username + ')';
+          sel.appendChild(opt);
+        });
+      } catch(e) {
+        // Fallback: hardcoded teachers
+        const fallback = [
+          { u:'form_teacher', n:'👑 班主任' },
+          { u:'chinese_t', n:'📖 华文老师' },
+          { u:'malay_t', n:'📝 国文老师' },
+          { u:'english_t', n:'🌐 英文老师' },
+          { u:'math_t', n:'🔢 数学老师' },
+          { u:'geography_t', n:'🌍 地理老师' },
+          { u:'history_t', n:'🏛️ 历史老师' },
+          { u:'science_t', n:'🔬 科学老师' },
+          { u:'computer_t', n:'💻 电脑老师' },
+          { u:'art_t', n:'🎨 美术老师' },
+          { u:'pe_t', n:'⚽ 体育老师' },
+          { u:'robotics_t', n:'🤖 机器人老师' }
+        ];
+        fallback.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.u;
+          opt.textContent = t.n + ' (' + t.u + ')';
+          sel.appendChild(opt);
+        });
+      }
+    }
+
     // Set UI active language button on load
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const activeLang = getLang();
       document.querySelectorAll('.lang-switcher button').forEach(b => b.classList.remove('active'));
       const activeBtn = document.getElementById('lang-btn-' + activeLang);
       if (activeBtn) activeBtn.classList.add('active');
+
+      await populateTeacherDropdown();
 
       // Auto redirect if already logged in
       if (getToken() && getUser()) {
@@ -101,7 +148,7 @@
     // Handle Form Submit
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const usernameInput = document.getElementById('username').value.trim();
+      const usernameInput = document.getElementById('username').value;
       const passwordInput = document.getElementById('password').value;
       const rememberInput = document.getElementById('remember').checked;
       const errorAlert = document.getElementById('error-alert');
@@ -109,7 +156,7 @@
       const submitBtn = document.getElementById('submit-btn');
 
       if (!usernameInput || !passwordInput) {
-        errorMsg.textContent = t('login.error.empty');
+        errorMsg.textContent = '请选择账号并输入密码！';
         errorAlert.style.display = 'block';
         return;
       }
@@ -122,7 +169,7 @@
         await ReportAPI.login(usernameInput, passwordInput, rememberInput);
         redirectToDashboard();
       } catch (err) {
-        errorMsg.textContent = err.message || '登录异常，请检查接口配置';
+        errorMsg.textContent = err.message || '登录失败，请检查账号和密码';
         errorAlert.style.display = 'block';
       } finally {
         submitBtn.removeAttribute('aria-busy');
