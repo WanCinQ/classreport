@@ -48,24 +48,10 @@
           <input type="password" id="password" autocomplete="current-password" required>
         </label>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <label for="remember" style="margin-bottom: 0; display: inline-flex; align-items: center; gap: 0.5rem;">
-            <input type="checkbox" id="remember" style="margin-bottom: 0;">
-            <span style="font-size: 0.85rem;">记住我 / Remember Me</span>
-          </label>
-          
-          <!-- Backend URL Settings Gear -->
-          <a href="#" onclick="toggleSettings()" style="font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.25rem;">
-            <i class="fa-solid fa-gear"></i> Backend URL
-          </a>
-        </div>
-
-        <!-- Hidden Worker URL Settings Panel -->
-        <div id="settings-panel" style="display: none; padding: 0.75rem; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
-          <label for="worker-url" style="font-size: 0.8rem; margin-bottom: 0.25rem; font-weight: 600;">Cloudflare Worker API URL:</label>
-          <input type="url" id="worker-url" style="font-size: 0.8rem; margin-bottom: 0.5rem;" placeholder="https://your-worker.workers.dev">
-          <button type="button" class="secondary" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;" onclick="saveSettings()">保存设置 / Save</button>
-        </div>
+        <label for="remember" style="margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" id="remember" style="margin-bottom: 0;">
+          <span style="font-size: 0.85rem;">记住我 / Remember Me</span>
+        </label>
 
         <button type="submit" id="submit-btn">
           <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="login.button">登录</span>
@@ -90,9 +76,6 @@
       const activeBtn = document.getElementById('lang-btn-' + activeLang);
       if (activeBtn) activeBtn.classList.add('active');
 
-      // Prep settings input
-      document.getElementById('worker-url').value = WORKER_URL;
-      
       // Auto redirect if already logged in
       if (getToken() && getUser()) {
         redirectToDashboard();
@@ -105,20 +88,6 @@
       const activeBtn = document.getElementById('lang-btn-' + e.detail.lang);
       if (activeBtn) activeBtn.classList.add('active');
     });
-
-    function toggleSettings() {
-      const panel = document.getElementById('settings-panel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function saveSettings() {
-      const url = document.getElementById('worker-url').value;
-      if (url) {
-        setWorkerUrl(url);
-        alert('API 接口地址更新成功！\nAPI URL updated successfully.');
-        document.getElementById('settings-panel').style.display = 'none';
-      }
-    }
 
     function redirectToDashboard() {
       const user = getUser();
