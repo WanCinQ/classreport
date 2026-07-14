@@ -11,7 +11,7 @@ const LocalData = {
   async loadConfig() {
     if (this._config) return this._config;
     try {
-      const res = await fetch('../class-config.json');
+      const res = await fetch('class-config.json');
       if (!res.ok) throw new Error('Config not found');
       this._config = await res.json();
       return this._config;
