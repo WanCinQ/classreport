@@ -5,16 +5,22 @@ const ReportAPI = {
 
   async _checkOnline() {
     if (this._offlineChecked) return !this._offlineMode;
+    // Quick timeout: if backend doesn't respond in 3s, go offline
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
       const res = await fetch(WORKER_URL + '/api/auth/me', {
-        headers: { 'Authorization': 'Bearer ' + (getToken() || 'test') }
+        headers: { 'Authorization': 'Bearer ' + (getToken() || 'test') },
+        signal: controller.signal
       });
-      this._offlineMode = false;
+      clearTimeout(timer);
+      this._offlineMode = !res.ok;
     } catch (e) {
-      console.warn('⚠️ Backend unreachable, switching to offline mode');
+      console.warn('⚠️ Backend unreachable, using offline mode');
       this._offlineMode = true;
     }
     this._offlineChecked = true;
+    if (this._offlineMode) console.log('📦 Running in OFFLINE mode — all data stored locally');
     return !this._offlineMode;
   },
 
