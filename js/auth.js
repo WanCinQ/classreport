@@ -1,14 +1,8 @@
-// Retrieve or set default worker URL
-let WORKER_URL = localStorage.getItem('report_worker_url') || 'https://hualian-reports-worker.hualianj2lclassreport.workers.dev';
-
-function setWorkerUrl(url) {
-  // Strip trailing slash
-  if (url.endsWith('/')) {
-    url = url.substring(0, url.length - 1);
-  }
-  localStorage.setItem('report_worker_url', url);
-  WORKER_URL = url;
-}
+// ============================================================
+// Backend API URL — 部署时修改此处即可
+// Cloudflare Worker URL (唯一需要修改的后端地址)
+// ============================================================
+const WORKER_URL = 'https://hualian-reports-worker.hualianj2lclassreport.workers.dev';
 
 function getToken() {
   return sessionStorage.getItem('report_token') || localStorage.getItem('report_token');
