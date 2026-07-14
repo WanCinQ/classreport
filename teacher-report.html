@@ -57,12 +57,13 @@
   <!-- Main Body Content -->
   <main class="container">
     
-    <!-- Subject Selector -->
-    <div class="grid" style="grid-template-columns: 1fr; margin-bottom: 1.5rem;">
+    <!-- Subject Header (dropdown for form teacher, label for subject teacher) -->
+    <div class="grid" id="subject-header-row" style="grid-template-columns: 1fr; margin-bottom: 1.5rem;">
       <article style="padding: 1rem; margin-bottom: 0;">
-        <label for="subject-select" style="margin-bottom: 0; font-weight: 600;">
+        <label for="subject-select" style="margin-bottom: 0; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
           <i class="fa-solid fa-book-open"></i> <span data-i18n="report.subject_select">选择负责科目</span>
-          <select id="subject-select" onchange="switchSubject()"></select>
+          <select id="subject-select" onchange="switchSubject()" style="display:none;"></select>
+          <strong id="subject-label" style="display:none; font-size:1.1rem;"></strong>
         </label>
       </article>
     </div>
@@ -268,7 +269,7 @@
       renderActiveStudentProfile();
     });
 
-    // Load subject and student mapping from worker
+    // Load subject and student mapping (offline-first)
     async function loadSubjectData() {
       try {
         const data = await ReportAPI.getMyReports();
@@ -282,16 +283,41 @@
           `;
           return;
         }
-        rebuildSubjectOptions();
-        currentSubjectIndex = 0;
-        document.getElementById('subject-select').value = rawSubjectsData[0].code;
-        
-        // Select first student
+
+        const user = getUser();
+        const isFormTeacher = user && user.role === 'form_teacher';
+        const selectEl = document.getElementById('subject-select');
+        const labelEl = document.getElementById('subject-label');
+
+        if (rawSubjectsData.length === 1 && !isFormTeacher) {
+          // Single-subject teacher: hide dropdown, show label
+          selectEl.style.display = 'none';
+          labelEl.style.display = '';
+          const sub = rawSubjectsData[0];
+          const name = sub.emoji + ' ' + (sub.display_name || sub.code);
+          labelEl.textContent = name;
+          currentSubjectIndex = 0;
+        } else {
+          // Form teacher or multi-subject: show dropdown
+          selectEl.style.display = '';
+          labelEl.style.display = 'none';
+          rebuildSubjectOptions();
+          currentSubjectIndex = 0;
+          if (rawSubjectsData[0]) selectEl.value = rawSubjectsData[0].code;
+        }
+
         selectedStudentIndex = 0;
         renderStudentsList();
         renderActiveStudentProfile();
+        updateProgressBar();
       } catch (err) {
-        alert('无法加载科目数据: ' + err.message);
+        document.getElementById('workspace-grid').innerHTML = `
+          <article class="premium-card" style="text-align: center; padding: 3rem; width: 100%;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+            <p>❌ 加载失败: ${err.message}</p>
+            <button onclick="location.reload()">重新加载 / Reload</button>
+          </article>
+        `;
       }
     }
 
