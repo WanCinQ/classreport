@@ -4,11 +4,17 @@ const ReportAPI = {
   _offlineChecked: false,
 
   async _checkOnline() {
+    // If we logged in offline, NEVER try to go online
+    if (sessionStorage.getItem('force_offline') === '1') {
+      this._offlineMode = true;
+      this._offlineChecked = true;
+      return false;
+    }
     if (this._offlineChecked) return !this._offlineMode;
-    // Quick timeout: if backend doesn't respond in 3s, go offline
+    // Quick timeout: if backend doesn't respond in 2s, go offline
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3000);
+      const timer = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(WORKER_URL + '/api/auth/me', {
         headers: { 'Authorization': 'Bearer ' + (getToken() || 'test') },
         signal: controller.signal
@@ -20,7 +26,7 @@ const ReportAPI = {
       this._offlineMode = true;
     }
     this._offlineChecked = true;
-    if (this._offlineMode) console.log('📦 Running in OFFLINE mode — all data stored locally');
+    if (this._offlineMode) console.log('📦 OFFLINE mode — all data in localStorage');
     return !this._offlineMode;
   },
 
@@ -79,7 +85,8 @@ const ReportAPI = {
     this._offlineMode = true;
     this._offlineChecked = true;
     console.log('📦 Logged in OFFLINE as:', teacher.name);
-    // Stay in offline mode for the entire session
+    // Stay in offline mode for the entire session — NEVER try backend
+    sessionStorage.setItem('force_offline', '1');
     this._offlineMode = true;
     this._offlineChecked = true;
     return { token: fakeToken, teacher: user, offline: true };
