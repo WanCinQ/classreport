@@ -50,10 +50,6 @@
           <input type="password" id="password" autocomplete="current-password" required>
         </label>
 
-        <div style="font-size:0.75rem; color:#94a3b8; margin:-0.5rem 0 0.5rem 0;">
-          💡 班主任密码: <strong>2026</strong>　|　科任密码: <strong>1+科目码</strong> (如华文 1001)
-        </div>
-
         <label for="remember" style="margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
           <input type="checkbox" id="remember" style="margin-bottom: 0;">
           <span style="font-size: 0.85rem;">记住我 / Remember Me</span>
@@ -76,42 +72,29 @@
   <script src="js/data.js"></script>
   <script src="js/report-api.js"></script>
   <script>
-    // Populate teacher dropdown from class-config.json
-    async function populateTeacherDropdown() {
+    // Populate teacher dropdown — hardcoded for reliability
+    function populateTeacherDropdown() {
       const sel = document.getElementById('username');
-      try {
-        const cfg = await LocalData.loadConfig();
-        const teachers = cfg.teachers || [];
-        teachers.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.username;
-          const roleLabel = t.role === 'form_teacher' ? ' 👑班主任' : ' 📝科任';
-          opt.textContent = (t.name || t.username) + roleLabel + ' (' + t.username + ')';
-          sel.appendChild(opt);
-        });
-      } catch(e) {
-        // Fallback: hardcoded teachers
-        const fallback = [
-          { u:'form_teacher', n:'👑 班主任' },
-          { u:'chinese_t', n:'📖 华文老师' },
-          { u:'malay_t', n:'📝 国文老师' },
-          { u:'english_t', n:'🌐 英文老师' },
-          { u:'math_t', n:'🔢 数学老师' },
-          { u:'geography_t', n:'🌍 地理老师' },
-          { u:'history_t', n:'🏛️ 历史老师' },
-          { u:'science_t', n:'🔬 科学老师' },
-          { u:'computer_t', n:'💻 电脑老师' },
-          { u:'art_t', n:'🎨 美术老师' },
-          { u:'pe_t', n:'⚽ 体育老师' },
-          { u:'robotics_t', n:'🤖 机器人老师' }
-        ];
-        fallback.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.u;
-          opt.textContent = t.n + ' (' + t.u + ')';
-          sel.appendChild(opt);
-        });
-      }
+      const teachers = [
+        { u:'form_teacher', n:'👑 班主任 (Form Teacher)', p:'2026' },
+        { u:'chinese_t', n:'📖 华文老师 (Chinese)', p:'1001' },
+        { u:'malay_t', n:'📝 国文老师 (Malay)', p:'1002' },
+        { u:'english_t', n:'🌐 英文老师 (English)', p:'1003' },
+        { u:'math_t', n:'🔢 数学老师 (Math)', p:'1004' },
+        { u:'geography_t', n:'🌍 地理老师 (Geography)', p:'1005' },
+        { u:'history_t', n:'🏛️ 历史老师 (History)', p:'1006' },
+        { u:'science_t', n:'🔬 科学老师 (Science)', p:'1007' },
+        { u:'computer_t', n:'💻 电脑老师 (Computer)', p:'1011' },
+        { u:'art_t', n:'🎨 美术老师 (Art)', p:'1012' },
+        { u:'pe_t', n:'⚽ 体育老师 (PE)', p:'1013' },
+        { u:'robotics_t', n:'🤖 机器人老师 (Robotics)', p:'1402' }
+      ];
+      teachers.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.u;
+        opt.textContent = t.n;
+        sel.appendChild(opt);
+      });
     }
 
     // Set UI active language button on load
