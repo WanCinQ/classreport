@@ -1,389 +1,153 @@
 <!DOCTYPE html>
 <html lang="zh" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>华联中学 - 学生评语系统</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .subject-tabs { display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.75rem; }
-    .subject-tab { padding:0.5rem 1rem; border-radius:20px; border:1px solid #e2e8f0; cursor:pointer; font-size:0.85rem; font-weight:600; background:#fff; transition:all 0.2s; white-space:nowrap; }
-    .subject-tab:hover { border-color:var(--pico-primary); background:#eff6ff; }
-    .subject-tab.active { background:var(--pico-primary); color:#fff; border-color:var(--pico-primary); }
-    .student-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.5rem; border-bottom:1px solid #f1f5f9; }
-    .student-row:hover { background:#f8fafc; }
-    .student-row .idx { width:30px; text-align:center; font-size:0.8rem; color:#94a3b8; flex-shrink:0; }
-    .student-row .photo-wrap { width:48px; height:48px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:1.1rem; }
-    .student-row .photo-wrap img { width:100%; height:100%; object-fit:cover; }
-    .student-row .info { flex:1; min-width:0; }
-    .student-row .info .name { font-weight:700; font-size:0.9rem; }
-    .student-row .info .meta { font-size:0.7rem; color:#94a3b8; }
-    .student-row .fb { flex:2; min-width:0; }
-    .student-row .fb textarea { width:100%; padding:0.4rem 0.6rem; font-size:0.85rem; border-radius:8px; border:1px solid #e2e8f0; resize:vertical; min-height:44px; font-family:inherit; }
-    .student-row .fb textarea:focus { border-color:var(--pico-primary); outline:none; box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
-    .student-row .status-col { width:60px; text-align:center; flex-shrink:0; }
-    .done-dot { display:inline-block; width:12px; height:12px; border-radius:50%; }
-    .done-dot.yes { background:#16a34a; }
-    .done-dot.no { background:#e2e8f0; border:2px solid #cbd5e1; }
-    .row-complete { background:#f0fdf4; }
-    @media (max-width:768px) { .student-row { flex-wrap:wrap; } .student-row .fb { flex:100%; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>华联中学 - 学生评语</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.s-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.s-tab{padding:6px 14px;border-radius:20px;border:1px solid #d1d5db;cursor:pointer;font-size:0.82rem;font-weight:600;background:#fff;transition:all 0.2s;white-space:nowrap}
+.s-tab:hover{border-color:#1a56db;background:#eff6ff}
+.s-tab.on{background:#1a56db;color:#fff;border-color:#1a56db}
+.s-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid #f1f5f9}
+.s-row:hover{background:#f8fafc}
+.s-row.done{background:#f0fdf4}
+.s-row .n{width:28px;text-align:center;font-size:0.78rem;color:#9ca3af;flex-shrink:0}
+.s-row .ph{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1rem}
+.s-row .ph img{width:100%;height:100%;object-fit:cover}
+.s-row .inf{flex:1;min-width:0}
+.s-row .inf .nm{font-weight:700;font-size:0.88rem;line-height:1.2}
+.s-row .inf .mt{font-size:0.7rem;color:#9ca3af}
+.s-row .fb{flex:2;min-width:0}
+.s-row .fb textarea{width:100%;padding:6px 10px;font-size:0.83rem;border-radius:8px;border:1px solid #d1d5db;resize:vertical;min-height:42px;font-family:inherit;background:#fff}
+.s-row .fb textarea:focus{border-color:#1a56db;outline:none;box-shadow:0 0 0 3px rgba(26,86,219,0.08)}
+.s-row .st{width:50px;text-align:center;flex-shrink:0;font-size:0.85rem}
+@media(max-width:768px){.s-row{flex-wrap:wrap}.s-row .fb{flex:100%}}
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="container">
-      <nav>
-        <ul>
-          <li><strong style="font-size:1.1rem;"><i class="fa-solid fa-graduation-cap" style="color:var(--pico-primary);"></i> 华联中学</strong></li>
-          <li><span id="user-badge" style="font-size:0.8rem;background:#e0e7ff;color:#3730a3;padding:0.2rem 0.6rem;border-radius:12px;font-weight:600;"></span></li>
-          <li id="nav-dash" style="display:none;"><a href="form-teacher.html" class="outline" style="font-size:0.8rem;padding:0.2rem 0.6rem;">📊 班主任后台</a></li>
-          <li><a href="#" onclick="showChangePwd()" style="font-size:0.8rem;">🔑 改密码</a></li>
-          <li><a href="#" onclick="doLogout()" style="color:#ef4444;font-size:0.8rem;">退出</a></li>
-          <li>
-            <div class="lang-switcher">
-              <button onclick="setLang('zh')" id="lb-zh">中</button>
-              <button onclick="setLang('en')" id="lb-en">EN</button>
-              <button onclick="setLang('ms')" id="lb-ms">BM</button>
-            </div>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+<header class="app-header"><div class="container"><nav>
+<ul><li><strong><i class="fa-solid fa-graduation-cap" style="color:#1a56db"></i> 华联中学</strong></li>
+<li><span id="ub" style="font-size:0.78rem;background:#e0e7ff;color:#3730a3;padding:3px 10px;border-radius:12px;font-weight:600"></span></li>
+<li id="nd" style="display:none"><a href="form-teacher.html" style="font-size:0.78rem">📊 班主任后台</a></li>
+<li><a href="#" onclick="dlg('pwd-dlg')" style="font-size:0.78rem">🔑 改密码</a></li>
+<li><a href="#" onclick="logout()" style="color:#ef4444;font-size:0.78rem">退出</a></li>
+<li><div class="lang-switcher"><button onclick="sl('zh')" id="lz">中</button><button onclick="sl('en')" id="le">EN</button><button onclick="sl('ms')" id="lm">BM</button></div></li>
+</ul>
+</nav></div></header>
 
-  <main class="container" style="padding-top:1rem;">
-    <!-- Subject Tabs -->
-    <div id="subject-tabs" class="subject-tabs"></div>
+<main class="container" style="padding-top:1rem">
+<div id="tabs" class="s-tabs"></div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+<progress id="pb" value="0" max="100" style="flex:1;height:10px;margin:0"></progress>
+<span id="pt" style="font-weight:700;font-size:0.88rem;white-space:nowrap">0/0</span>
+</div>
+<article class="premium-card" style="padding:1rem">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<div><input type="search" id="sq" placeholder="🔍 搜索..." oninput="render()" style="max-width:220px;font-size:0.82rem;padding:4px 10px"><span id="sc" style="font-size:0.78rem;color:#9ca3af;margin-left:8px"></span></div>
+<button onclick="csv()" style="font-size:0.78rem;padding:4px 12px;color:#10b981;border-color:#10b981" class="outline">📥 导出CSV</button>
+</div>
+<div id="rows"></div>
+</article>
+</main>
 
-    <!-- Progress -->
-    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-      <progress id="prog-bar" value="0" max="100" style="flex:1; height:10px; margin:0;"></progress>
-      <span id="prog-text" style="font-weight:700; font-size:0.9rem; white-space:nowrap;">0/0</span>
-    </div>
+<dialog id="pwd-dlg"><article style="max-width:380px"><h4>修改密码</h4>
+<div id="pe" style="display:none;color:#ef4444;margin-bottom:8px"></div>
+<input type="password" id="po" placeholder="原密码" style="margin-bottom:6px">
+<input type="password" id="pn" placeholder="新密码" style="margin-bottom:6px">
+<input type="password" id="pc" placeholder="确认新密码" style="margin-bottom:6px">
+<div style="display:flex;gap:8px;justify-content:flex-end"><button class="secondary" onclick="document.getElementById('pwd-dlg').close()">取消</button><button onclick="chpwd()">修改密码</button></div>
+</article></dialog>
 
-    <!-- Student List -->
-    <article class="premium-card" style="padding:1rem;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-        <div>
-          <input type="search" id="search-box" placeholder="🔍 搜索学生..." oninput="renderAll()" style="max-width:250px; font-size:0.85rem; padding:0.3rem 0.6rem;">
-          <span id="student-count" style="font-size:0.8rem; color:#94a3b8; margin-left:0.5rem;"></span>
-        </div>
-        <button class="outline" style="font-size:0.8rem; color:#10b981; border-color:#10b981; padding:0.3rem 0.75rem;" onclick="exportCSV()">📥 导出CSV</button>
-      </div>
-      <div id="student-rows"></div>
-    </article>
-  </main>
+<button class="theme-toggle" onclick="tt()">🌓</button>
 
-  <!-- Password Modal -->
-  <dialog id="pwd-modal">
-    <article style="max-width:400px;">
-      <h4>修改密码</h4>
-      <div id="pwd-err" style="display:none;color:#ef4444;margin-bottom:0.5rem;"></div>
-      <input type="password" id="pwd-old" placeholder="原密码" style="margin-bottom:0.5rem;">
-      <input type="password" id="pwd-new" placeholder="新密码" style="margin-bottom:0.5rem;">
-      <input type="password" id="pwd-confirm" placeholder="确认新密码" style="margin-bottom:0.5rem;">
-      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-        <button class="secondary" onclick="document.getElementById('pwd-modal').close()">取消</button>
-        <button onclick="doChangePwd()">修改密码</button>
-      </div>
-    </article>
-  </dialog>
+<script>
+// ============ ALL CODE INLINE - NO EXTERNAL DEPS ============
 
-  <!-- Dark Mode -->
-  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+// --- I18N ---
+const I18N={zh:{subject:'科目',progress:'进度',search:'搜索学生...',export:'导出CSV',chpwd:'修改密码',cancel:'取消',save:'修改密码',oldPwd:'原密码',newPwd:'新密码',confirmPwd:'确认新密码',pwdMismatch:'两次密码不一致',pwdOk:'密码修改成功！',logout:'退出',dashboard:'班主任后台',noSubject:'你没有被分配任何科目。请联系班主任。',studentId:'学号',gender:'性别',male:'男',female:'女',hostelYes:'🏠寄宿',hostelNo:'🚶通勤',sibling:'兄妹',done:'已完成',pending:'未完成',placeholder:'输入评语...',total:'学生'},en:{subject:'Subject',progress:'Progress',search:'Search students...',export:'Export CSV',chpwd:'Change Password',cancel:'Cancel',save:'Save',oldPwd:'Current Password',newPwd:'New Password',confirmPwd:'Confirm Password',pwdMismatch:'Passwords do not match',pwdOk:'Password changed!',logout:'Logout',dashboard:'Dashboard',noSubject:'No subjects assigned. Contact form teacher.',studentId:'ID',gender:'Gender',male:'Male',female:'Female',hostelYes:'🏠 Boarder',hostelNo:'🚶 Commuter',sibling:'Siblings',done:'Done',pending:'Pending',placeholder:'Enter comment...',total:'students'},ms:{subject:'Subjek',progress:'Kemajuan',search:'Cari pelajar...',export:'Eksport CSV',chpwd:'Tukar Kata Laluan',cancel:'Batal',save:'Simpan',oldPwd:'Kata Laluan Lama',newPwd:'Kata Laluan Baru',confirmPwd:'Sahkan',pwdMismatch:'Kata laluan tidak sepadan',pwdOk:'Kata laluan berjaya ditukar!',logout:'Log Keluar',dashboard:'Dashboard',noSubject:'Tiada subjek. Hubungi guru kelas.',studentId:'ID',gender:'Jantina',male:'Lelaki',female:'Perempuan',hostelYes:'🏠 Asrama',hostelNo:'🚶 Ulang-alik',sibling:'Adik-beradik',done:'Selesai',pending:'Belum',placeholder:'Tulis ulasan...',total:'pelajar'}};
+function gl(){return localStorage.getItem('report_lang')||'zh'}
+function sl(l){localStorage.setItem('report_lang',l);updateLangUI();render()}
+function t(k){const lang=gl();return (I18N[lang]&&I18N[lang][k])||I18N.zh[k]||k}
+function updateLangUI(){const lang=gl();['zh','en','ms'].forEach(l=>{const b=document.getElementById('l'+l[0]);if(b)b.classList.toggle('active',l===lang)});document.title='华联中学 - '+(lang==='en'?'Reports':lang==='ms'?'Laporan':'学生评语')}
 
-  <script src="js/auth.js"></script>
-  <script src="js/i18n.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/report-api.js"></script>
-  <script>
-    // ====== GLOBALS ======
-    let SUBJECTS = [];       // [{code, name, emoji, students:[{studentId, nameZh, nameEn, gender, hostel, photo, feedback, isComplete}]}]
-    let currentSubIdx = 0;
-    let saveTimers = {};    // Debounce timers per student
+// --- AUTH ---
+function getT(){return sessionStorage.getItem('rt')||localStorage.getItem('rt')}
+function getU(){try{return JSON.parse(sessionStorage.getItem('ru')||localStorage.getItem('ru')||'null')}catch(e){return null}}
+function logout(){sessionStorage.clear();localStorage.removeItem('rt');localStorage.removeItem('ru');window.location.href='teacher-login.html'}
 
-    // ====== INIT ======
-    (async function init() {
-      // Check auth
-      const user = getUser();
-      if (!user || !getToken()) { window.location.href = 'teacher-login.html'; return; }
+// --- DATA ---
+let CFG=null;
+async function loadCfg(){if(CFG)return CFG;try{const r=await fetch('class-config.json');CFG=await r.json()}catch(e){CFG={subjects:[],teachers:[],students:[],currentAcademicYear:'2026'}}return CFG}
+function activeStudents(y){const yr=y||(CFG&&CFG.currentAcademicYear)||'2026';return(CFG.students||[]).filter(s=>s.academicYear===yr&&s.status==='active')}
+function loadReport(yr,sid,code){const k='r_'+yr+'_'+sid+'_'+code;try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function saveReport(yr,sid,code,fb,ok){const k='r_'+yr+'_'+sid+'_'+code;localStorage.setItem(k,JSON.stringify({feedback:fb,isComplete:ok?1:0,ts:new Date().toISOString()}))}
 
-      // Update UI
-      updateLangBtns();
-      document.getElementById('user-badge').textContent = user.display_name || user.username;
-      if (user.role === 'form_teacher') {
-        document.getElementById('nav-dash').style.display = '';
-      }
+// --- APP STATE ---
+let SUBS=[];  // [{code,name,emoji,students:[{sid,nameZh,nameEn,gender,hostel,photo,studentPhone,fatherPhone,motherPhone,address,siblings,feedback,isComplete}]}]
+let curSub=0;
+let timers={};
 
-      // Load class config
-      const cfg = await LocalData.loadConfig();
-      const year = cfg.currentAcademicYear || '2026';
-      const activeStudents = LocalData.getActiveStudents(year);
+// --- INIT ---
+(async function(){
+const u=getU();if(!u||!getT()){window.location.href='teacher-login.html';return}
+updateLangUI();
+document.getElementById('ub').textContent=u.display_name||u.username;
+if(u.role==='form_teacher')document.getElementById('nd').style.display='';
 
-      // Determine teacher's subjects
-      let teacherSubjects;
-      if (user.role === 'form_teacher') {
-        teacherSubjects = cfg.subjects || [];
-      } else {
-        const teacher = (cfg.teachers || []).find(t => t.username === user.username);
-        const codes = teacher ? teacher.subjects : [];
-        teacherSubjects = (cfg.subjects || []).filter(s => codes.includes('*') || codes.includes(s.code));
-      }
+const cfg=await loadCfg();
+const yr=cfg.currentAcademicYear||'2026';
+const active=activeStudents(yr);
 
-      // Build subject data with students + load from localStorage
-      SUBJECTS = teacherSubjects.map(sub => ({
-        code: sub.code,
-        name: sub.name,
-        name_en: sub.name_en,
-        name_ms: sub.name_ms,
-        emoji: sub.emoji,
-        students: activeStudents.map(st => {
-          const key = `report_${year}_${st.studentId}_${sub.code}`;
-          const saved = JSON.parse(localStorage.getItem(key) || 'null');
-          return {
-            studentId: st.studentId,
-            studentNo: st.studentNo,
-            nameZh: st.nameZh,
-            nameEn: st.nameEn,
-            gender: st.gender,
-            hostel: st.hostel,
-            photo: st.photo || ('photos/' + st.studentId + '.jpg'),
-            // Privacy fields (only for form teacher)
-            studentPhone: st.studentPhone || '',
-            fatherPhone: st.fatherPhone || '',
-            motherPhone: st.motherPhone || '',
-            address: st.address || '',
-            siblings: st.siblings || '',
-            // Report data
-            feedback: saved ? saved.feedback : '',
-            isComplete: saved ? saved.isComplete : 0
-          };
-        })
-      }));
+let tSubs;
+if(u.role==='form_teacher'){tSubs=cfg.subjects||[]}
+else{const tc=(cfg.teachers||[]).find(t=>t.username===u.username);const codes=tc?tc.subjects:[];tSubs=(cfg.subjects||[]).filter(s=>codes.includes('*')||codes.includes(s.code))}
 
-      if (SUBJECTS.length === 0) {
-        document.getElementById('student-rows').innerHTML = '<p style="text-align:center;padding:3rem;color:#94a3b8;">你没有被分配任何科目。请联系班主任。</p>';
-        return;
-      }
+SUBS=tSubs.map(sub=>({code:sub.code,name:sub.name,name_en:sub.name_en||sub.name,name_ms:sub.name_ms||sub.name,emoji:sub.emoji||'',students:active.map(st=>{const sv=loadReport(yr,st.studentId,sub.code);return{sid:st.studentId,sno:st.studentNo,nameZh:st.nameZh,nameEn:st.nameEn,gender:st.gender,hostel:st.hostel,photo:st.photo||('photos/'+st.studentId+'.jpg'),studentPhone:st.studentPhone||'',fatherPhone:st.fatherPhone||'',motherPhone:st.motherPhone||'',address:st.address||'',siblings:st.siblings||'',feedback:sv?sv.feedback:'',isComplete:sv?sv.isComplete:0}})})}));
 
-      // Render
-      renderTabs();
-      selectSubject(0);
-    })();
+if(SUBS.length===0){document.getElementById('rows').innerHTML='<p style="text-align:center;padding:3rem;color:#9ca3af">'+t('noSubject')+'</p>';return}
+renderTabs();selectSub(0);
+})();
 
-    // ====== SUBJECT TABS ======
-    function renderTabs() {
-      const container = document.getElementById('subject-tabs');
-      container.innerHTML = SUBJECTS.map((s, i) => {
-        const lang = getLang();
-        let name = s.name;
-        if (lang === 'en') name = s.name_en || s.name;
-        if (lang === 'ms') name = s.name_ms || s.name;
-        const done = s.students.filter(st => st.isComplete === 1).length;
-        const total = s.students.length;
-        return `<span class="subject-tab" onclick="selectSubject(${i})" id="tab-${i}">${s.emoji} ${name} <small style="opacity:0.7;">${done}/${total}</small></span>`;
-      }).join('');
-    }
+// --- RENDER ---
+function renderTabs(){document.getElementById('tabs').innerHTML=SUBS.map((s,i)=>{const lang=gl();let nm=s.name;if(lang==='en')nm=s.name_en;if(lang==='ms')nm=s.name_ms;const dn=s.students.filter(st=>st.isComplete===1).length;return'<span class="s-tab" onclick="selectSub('+i+')" id="tb'+i+'">'+s.emoji+' '+nm+' <small>'+dn+'/'+s.students.length+'</small></span>'}).join('')}
+function selectSub(i){curSub=i;document.querySelectorAll('.s-tab').forEach((el,j)=>el.classList.toggle('on',j===i));render()}
+function render(){
+if(SUBS.length===0)return;
+const sub=SUBS[curSub],u=getU(),isFT=u&&u.role==='form_teacher',q=(document.getElementById('sq').value||'').toLowerCase();
+const filtered=sub.students.filter(st=>{if(!q)return true;return st.nameZh.toLowerCase().includes(q)||st.nameEn.toLowerCase().includes(q)||st.sid.includes(q)});
+const lang=gl();
+document.getElementById('rows').innerHTML=filtered.map((st,i)=>{
+const done=st.isComplete===1;
+let meta=t('studentId')+': '+st.sid+' | '+t('gender')+': '+(st.gender==='M'?t('male'):t('female'));
+if(isFT){meta+=' | '+(st.hostel?t('hostelYes'):t('hostelNo'));if(st.siblings)meta+=' | '+t('sibling')+': '+st.siblings}
+return'<div class="s-row'+(done?' done':'')+'" id="rw'+st.sid+'"><div class="n">'+(i+1)+'</div><div class="ph" style="background:'+avc(st.sid)+'"><img src="'+st.photo+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+st.nameZh.charAt(0)+'\'" loading="lazy"></div><div class="inf"><div class="nm">'+st.nameZh+'</div><div class="mt">'+st.nameEn+'</div><div class="mt">'+meta+'</div></div><div class="fb"><textarea id="ta'+st.sid+'" placeholder="'+t('placeholder')+'" oninput="onType(\''+st.sid+'\')" onblur="onBlur(\''+st.sid+'\')">'+esc(st.feedback)+'</textarea></div><div class="st"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+(done?'#16a34a':'#e5e7eb;border:2px solid #d1d5db')+'" id="dt'+st.sid+'"></span></div></div>'}).join('');
+document.getElementById('sc').textContent=filtered.length+'/'+sub.students.length+' '+t('total');
+updateProg()}
+function avc(id){const cl=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f43f5e','#6366f1'];const n=parseInt((id||'').replace(/\D/g,''))||0;return cl[n%cl.length]}
+function updateProg(){const sub=SUBS[curSub];const dn=sub.students.filter(s=>s.isComplete===1).length,ttl=sub.students.length,pct=ttl>0?Math.round(dn/ttl*100):0;document.getElementById('pb').value=pct;document.getElementById('pt').textContent=dn+'/'+ttl+' ('+pct+'%)'}
+function updateTabCounts(){SUBS.forEach((s,i)=>{const tb=document.getElementById('tb'+i);if(tb){const dn=s.students.filter(st=>st.isComplete===1).length;tb.innerHTML=tb.innerHTML.replace(/<small.*<\/small>/,'<small>'+dn+'/'+s.students.length+'</small>')}})}
 
-    function selectSubject(idx) {
-      currentSubIdx = idx;
-      document.querySelectorAll('.subject-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
-      renderAll();
-    }
+// --- SAVE ---
+function onType(sid){if(timers[sid])clearTimeout(timers[sid]);const ta=document.getElementById('ta'+sid);if(!ta)return;const has=ta.value.trim().length>0;const dt=document.getElementById('dt'+sid);if(dt)dt.style.background=has?'#16a34a':'#e5e7eb';timers[sid]=setTimeout(()=>save(sid),600)}
+function onBlur(sid){if(timers[sid])clearTimeout(timers[sid]);save(sid)}
+async function save(sid){const sub=SUBS[curSub];const st=sub.students.find(s=>s.sid===sid);if(!st)return;const ta=document.getElementById('ta'+sid);if(!ta)return;const fb=ta.value,ok=fb.trim().length>0?1:0;st.feedback=fb;st.isComplete=ok;const dt=document.getElementById('dt'+sid);if(dt)dt.style.background=ok?'#16a34a':'#e5e7eb';const rw=document.getElementById('rw'+sid);if(rw)rw.classList.toggle('done',ok===1);const cfg=await loadCfg();const yr=cfg.currentAcademicYear||'2026';saveReport(yr,sid,sub.code,fb,ok);updateProg();updateTabCounts()}
 
-    // ====== RENDER STUDENTS ======
-    function renderAll() {
-      if (SUBJECTS.length === 0) return;
-      const sub = SUBJECTS[currentSubIdx];
-      const user = getUser();
-      const isFT = user && user.role === 'form_teacher';
-      const searchQ = (document.getElementById('search-box').value || '').toLowerCase();
+// --- CSV ---
+function csv(){const sub=SUBS[curSub];const lang=gl();let nm=sub.name;if(lang==='en')nm=sub.name_en;if(lang==='ms')nm=sub.name_ms;let c='﻿序号,学号,中文名,英文名,性别,评语,状态\n';sub.students.forEach((st,i)=>{c+=i+1+',"'+st.sid+'","'+st.nameZh+'","'+st.nameEn+'","'+(st.gender==='M'?t('male'):t('female'))+'","'+(st.feedback||'').replace(/"/g,'""')+'","'+(st.isComplete===1?t('done'):t('pending'))+'"\n'});const b=new Blob([c],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm+'_评语.csv';a.click()}
 
-      const filtered = sub.students.filter(st => {
-        if (!searchQ) return true;
-        return st.nameZh.toLowerCase().includes(searchQ) ||
-               st.nameEn.toLowerCase().includes(searchQ) ||
-               st.studentId.includes(searchQ);
-      });
+// --- PASSWORD ---
+function dlg(id){document.getElementById(id).showModal()}
+async function chpwd(){const o=document.getElementById('po').value,n=document.getElementById('pn').value,c=document.getElementById('pc').value,er=document.getElementById('pe');if(n!==c){er.textContent=t('pwdMismatch');er.style.display='block';return}try{const r=await fetch((typeof WORKER_URL!=='undefined'?WORKER_URL:'')+'/api/auth/change-password',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getT()},body:JSON.stringify({old_password:o,new_password:n})});if(!r.ok)throw new Error('Failed');alert(t('pwdOk'));document.getElementById('pwd-dlg').close()}catch(e){er.textContent=e.message;er.style.display='block'}}
 
-      const container = document.getElementById('student-rows');
-      container.innerHTML = filtered.map((st, i) => {
-        const rowClass = st.isComplete === 1 ? 'student-row row-complete' : 'student-row';
-        const photoHTML = `<img src="${st.photo}" onerror="this.style.display='none';this.parentElement.textContent='${st.nameZh.substring(0,1)}';" loading="lazy">`;
+// --- THEME ---
+function tt(){const h=document.documentElement,c=h.getAttribute('data-theme');h.setAttribute('data-theme',c==='dark'?'light':'dark');localStorage.setItem('report_theme',c==='dark'?'light':'dark')}
+(function(){const ts=localStorage.getItem('report_theme');if(ts)document.documentElement.setAttribute('data-theme',ts)})();
 
-        // Privacy: subject teachers see name+ID+gender only
-        let metaHTML = `学号: ${st.studentId} | ${st.gender === 'M' ? '男' : '女'}`;
-        if (isFT) {
-          metaHTML += ` | ${st.hostel ? '🏠寄宿' : '🚶通勤'}`;
-          if (st.siblings) metaHTML += ` | 兄妹: ${st.siblings}`;
-        }
-
-        return `
-          <div class="${rowClass}" id="row-${st.studentId}">
-            <div class="idx">${i + 1}</div>
-            <div class="photo-wrap" style="background:${avatarColor(st.studentId)};">${photoHTML}</div>
-            <div class="info">
-              <div class="name">${st.nameZh}</div>
-              <div class="meta">${st.nameEn}</div>
-              <div class="meta">${metaHTML}</div>
-            </div>
-            <div class="fb">
-              <textarea id="ta-${st.studentId}" placeholder="输入评语..."
-                oninput="onType('${st.studentId}')"
-                onblur="onBlur('${st.studentId}')">${escHtml(st.feedback)}</textarea>
-            </div>
-            <div class="status-col">
-              <span class="done-dot ${st.isComplete === 1 ? 'yes' : 'no'}" id="dot-${st.studentId}" title="${st.isComplete === 1 ? '已完成' : '未完成'}"></span>
-            </div>
-          </div>`;
-      }).join('');
-
-      document.getElementById('student-count').textContent = `${filtered.length}/${sub.students.length} 学生`;
-      updateProgress();
-    }
-
-    function avatarColor(id) {
-      const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f43f5e','#6366f1'];
-      const n = parseInt(id.replace(/\D/g,'')) || 0;
-      return colors[n % colors.length];
-    }
-
-    // ====== SAVE ======
-    function onType(studentId) {
-      // Debounce save
-      if (saveTimers[studentId]) clearTimeout(saveTimers[studentId]);
-      // Update dot immediately
-      const ta = document.getElementById('ta-' + studentId);
-      const hasText = ta.value.trim().length > 0;
-      const dot = document.getElementById('dot-' + studentId);
-      if (dot) { dot.className = 'done-dot ' + (hasText ? 'yes' : 'no'); }
-
-      saveTimers[studentId] = setTimeout(() => saveOne(studentId), 800);
-    }
-
-    function onBlur(studentId) {
-      if (saveTimers[studentId]) clearTimeout(saveTimers[studentId]);
-      saveOne(studentId);
-    }
-
-    async function saveOne(studentId) {
-      const sub = SUBJECTS[currentSubIdx];
-      const st = sub.students.find(s => s.studentId === studentId);
-      if (!st) return;
-      const ta = document.getElementById('ta-' + studentId);
-      if (!ta) return;
-      const feedback = ta.value;
-      const isComplete = feedback.trim().length > 0 ? 1 : 0;
-
-      // Update local state
-      st.feedback = feedback;
-      st.isComplete = isComplete;
-
-      // Update dot and row
-      const dot = document.getElementById('dot-' + studentId);
-      if (dot) { dot.className = 'done-dot ' + (isComplete ? 'yes' : 'no'); }
-      const row = document.getElementById('row-' + studentId);
-      if (row) { row.classList.toggle('row-complete', isComplete === 1); }
-
-      // Save to localStorage (offline-first)
-      const cfg = await LocalData.loadConfig();
-      const year = cfg.currentAcademicYear || '2026';
-      const key = `report_${year}_${studentId}_${sub.code}`;
-      localStorage.setItem(key, JSON.stringify({ feedback, isComplete, updatedAt: new Date().toISOString() }));
-
-      // Log activity
-      if (window._logActivity) window._logActivity(`save_${studentId}_${sub.code}`);
-
-      // Update progress & tabs
-      updateProgress();
-      updateTabCounts();
-
-      // Try backend (fire-and-forget)
-      try { await ReportAPI.saveReport(parseInt(studentId)||0, sub.code, feedback, isComplete===1); } catch(e) {}
-    }
-
-    // ====== PROGRESS ======
-    function updateProgress() {
-      const sub = SUBJECTS[currentSubIdx];
-      const total = sub.students.length;
-      const done = sub.students.filter(s => s.isComplete === 1).length;
-      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-      document.getElementById('prog-bar').value = pct;
-      document.getElementById('prog-text').textContent = `${done}/${total} (${pct}%)`;
-    }
-
-    function updateTabCounts() {
-      SUBJECTS.forEach((sub, i) => {
-        const tab = document.getElementById('tab-' + i);
-        if (tab) {
-          const done = sub.students.filter(s => s.isComplete === 1).length;
-          tab.innerHTML = tab.innerHTML.replace(/<small.*<\/small>/, `<small style="opacity:0.7;">${done}/${sub.students.length}</small>`);
-        }
-      });
-    }
-
-    // ====== EXPORT ======
-    function exportCSV() {
-      const sub = SUBJECTS[currentSubIdx];
-      const lang = getLang();
-      let subName = sub.name;
-      if (lang === 'en') subName = sub.name_en || sub.name;
-      if (lang === 'ms') subName = sub.name_ms || sub.name;
-      let csv = '﻿序号,学号,中文名,英文名,性别,评语,状态\n';
-      sub.students.forEach((st, i) => {
-        csv += `${i+1},"${st.studentId}","${st.nameZh}","${st.nameEn}","${st.gender}","${(st.feedback||'').replace(/"/g,'""')}","${st.isComplete===1?'已完成':'未完成'}"\n`;
-      });
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `${subName}_评语.csv`; a.click();
-    }
-
-    // ====== PASSWORD ======
-    function showChangePwd() { document.getElementById('pwd-modal').showModal(); }
-    async function doChangePwd() {
-      const oldP = document.getElementById('pwd-old').value;
-      const newP = document.getElementById('pwd-new').value;
-      const cfm = document.getElementById('pwd-confirm').value;
-      const err = document.getElementById('pwd-err');
-      if (newP !== cfm) { err.textContent = '两次密码不一致'; err.style.display='block'; return; }
-      try {
-        await ReportAPI.changePassword(oldP, newP);
-        alert('密码修改成功！');
-        document.getElementById('pwd-modal').close();
-      } catch(e) { err.textContent = e.message; err.style.display='block'; }
-    }
-
-    // ====== LOGOUT ======
-    function doLogout() { clearToken(); clearUser(); sessionStorage.clear(); window.location.href = 'teacher-login.html'; }
-
-    // ====== LANGUAGE ======
-    function updateLangBtns() {
-      const lang = getLang();
-      ['zh','en','ms'].forEach(l => {
-        const btn = document.getElementById('lb-'+l);
-        if (btn) btn.classList.toggle('active', l === lang);
-      });
-    }
-    document.addEventListener('langChanged', () => {
-      updateLangBtns();
-      renderTabs();
-      renderAll();
-    });
-
-    // ====== THEME ======
-    function toggleTheme() {
-      const html = document.documentElement;
-      const cur = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-      localStorage.setItem('report_theme', cur === 'dark' ? 'light' : 'dark');
-    }
-    (function(){ const t = localStorage.getItem('report_theme'); if(t) document.documentElement.setAttribute('data-theme', t); })();
-
-    // ====== UTILS ======
-    function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  </script>
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
 </body>
 </html>
