@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -159,7 +159,7 @@ function getU(){try{return JSON.parse(sessionStorage.getItem('report_user')||loc
 function logout(){sessionStorage.clear();localStorage.removeItem('report_token');localStorage.removeItem('report_user');window.location.href='teacher-login.html'}
 
 // Config
-function loadCfg(){return new Promise(function(resolve){if(CFG)return resolve(CFG);fetch('class-config.json').then(function(r){return r.json()}).then(function(c){CFG=c;resolve(c)}).catch(function(){CFG={subjects:[],teachers:[],students:[],currentAcademicYear:'2026'};resolve(CFG)})})}
+function loadCfg(){return new Promise(function(resolve,reject){if(CFG)return resolve(CFG);console.log('[ft] Fetching class-config.json...');fetch('class-config.json').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(c){console.log('[ft] Config OK:',c.students.length+' students,',c.subjects.length+' subjects');CFG=c;resolve(c)}).catch(function(e){console.error('[ft] Config FAILED:',e.message);CFG=null;reject(e)})})}
 function activeStudents(y){var yr=y||(CFG&&CFG.currentAcademicYear)||'2026';return(CFG.students||[]).filter(function(s){return s.academicYear===yr&&s.status==='active'})}
 function allStudents(y){var yr=y||(CFG&&CFG.currentAcademicYear)||'2026';return(CFG.students||[]).filter(function(s){return s.academicYear===yr})}
 function loadReport(yr,sid,code){var k='r_'+yr+'_'+sid+'_'+code;try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
@@ -167,24 +167,34 @@ function saveReport(yr,sid,code,fb,ok){var k='r_'+yr+'_'+sid+'_'+code;localStora
 
 // Init
 (function(){
-var u=getU();if(!u||!getT()||u.role!=='form_teacher'){window.location.href='teacher-login.html';return}
+console.log('[ft] Init start');
+var u=getU();console.log('[ft] User:',u?u.username:'null','role:',u?u.role:'null');
+if(!u||!getT()||u.role!=='form_teacher'){console.log('[ft] Auth fail → redirect');window.location.href='teacher-login.html';return}
 document.getElementById('ub').textContent=u.display_name||u.username;
 
 loadCfg().then(function(cfg){
+try{
+console.log('[ft] Processing...');
 var yr=cfg.currentAcademicYear||'2026';
 document.getElementById('cls-name').textContent=(cfg.academicYears&&cfg.academicYears[yr]&&cfg.academicYears[yr].classes?Object.values(cfg.academicYears[yr].classes)[0]:{name:'初二爱'}).name||'初二爱';
 
-// Build MATRIX data
-var active=activeStudents(yr),all=allStudents(yr),subs=cfg.subjects||[];
+var subs=cfg.subjects||[],all=allStudents(yr);
+console.log('[ft] Year='+yr+' Students='+all.length+' Subjects='+subs.length);
 MATRIX.subjects=subs.map(function(s){return{code:s.code,name:s.name,emoji:s.emoji||''}});
 MATRIX.students=all.map(function(st){return{sid:st.studentId,sno:st.studentNo,nameZh:st.nameZh,nameEn:st.nameEn,gender:st.gender,hostel:st.hostel,studentPhone:st.studentPhone||'',fatherPhone:st.fatherPhone||'',motherPhone:st.motherPhone||'',address:st.address||'',siblings:st.siblings||'',status:st.status,leftDate:st.leftDate||'',leftReason:st.leftReason||'',photo:st.photo||('photos/'+st.studentId+'.jpg'),raw:st}});
 MATRIX.reports=[];
 all.forEach(function(st){subs.forEach(function(sub){var r=loadReport(yr,st.studentId,sub.code);if(r)MATRIX.reports.push({student_id:parseInt(st.studentId)||0,subject_code:sub.code,feedback:r.feedback,is_complete:r.isComplete})})});
 
+console.log('[ft] Rendering...');
 renderMatrix();
 renderProfiles();
 initAISubject();
 initResetTeachers();
+console.log('[ft] Init OK');
+}catch(e){console.error('[ft] Error:',e);document.getElementById('mx-body').innerHTML='<tr><td colspan="2" style="text-align:center;padding:2rem;color:#dc2626">❌ '+escHtml(e.message)+'</td></tr>'}
+}).catch(function(e){
+console.error('[ft] Load failed:',e);
+document.getElementById('mx-body').innerHTML='<tr><td colspan="2" style="text-align:center;padding:2rem;color:#dc2626">❌ 无法加载数据: '+escHtml(e.message||'')+'<br><small>请检查网络后刷新</small></td></tr>'
 });
 })();
 
