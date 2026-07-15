@@ -62,7 +62,7 @@ header.app-header nav{display:flex;justify-content:space-between;align-items:cen
 <div><input type="search" id="sq" placeholder="🔍 搜索..." oninput="render()" style="max-width:200px;font-size:0.82rem;padding:4px 10px"><span id="sc" style="font-size:0.78rem;color:#9ca3af;margin-left:8px"></span></div>
 <button onclick="exportCSV()" style="font-size:0.78rem;padding:4px 12px;color:#10b981;border-color:#10b981" class="outline">📥 导出CSV</button>
 </div>
-<div id="rows"></div>
+<div id="rows"><p style="text-align:center;padding:3rem;color:#9ca3af">⏳ 加载中 / Loading...</p></div>
 </div>
 </main>
 
@@ -77,50 +77,66 @@ header.app-header nav{display:flex;justify-content:space-between;align-items:cen
 <button class="toggle" onclick="toggleTheme()">🌓</button>
 
 <script>
-// ==================== ALL-IN-ONE ====================
+// ==================== ALL-IN-ONE v2 ====================
 var LANG='zh';
 var CFG=null;
 var SUBS=[],curSub=0,timers={};
 
 // I18N dict
-var TXT={zh:{noSubj:'你没有被分配任何科目。请联系班主任。',sid:'学号',gender:'性别',male:'男',female:'女',hostY:'🏠寄宿',hostN:'🚶通勤',sib:'兄妹',ph:'输入评语...',search:'🔍 搜索...',export:'📥 导出CSV',done:'已完成',pend:'未完成',total:'学生',chpwd:'修改密码',cancel:'取消',save:'保存',oldPwd:'原密码',newPwd:'新密码',cfmPwd:'确认新密码',pwdMis:'两次密码不一致',pwdOk:'密码修改成功！',pwdFail:'修改失败'},en:{noSubj:'No subjects assigned. Contact form teacher.',sid:'ID',gender:'Gender',male:'Male',female:'Female',hostY:'🏠 Boarder',hostN:'🚶 Commuter',sib:'Siblings',ph:'Enter comment...',search:'🔍 Search...',export:'📥 Export CSV',done:'Done',pend:'Pending',total:'students',chpwd:'Change Password',cancel:'Cancel',save:'Save',oldPwd:'Current',newPwd:'New',cfmPwd:'Confirm',pwdMis:'Passwords do not match',pwdOk:'Password changed!',pwdFail:'Change failed'},ms:{noSubj:'Tiada subjek. Hubungi guru kelas.',sid:'ID',gender:'Jantina',male:'Lelaki',female:'Perempuan',hostY:'🏠 Asrama',hostN:'🚶 Ulang-alik',sib:'Adik-beradik',ph:'Tulis ulasan...',search:'🔍 Cari...',export:'📥 Eksport CSV',done:'Selesai',pend:'Belum',total:'pelajar',chpwd:'Tukar Kata Laluan',cancel:'Batal',save:'Simpan',oldPwd:'Lama',newPwd:'Baru',cfmPwd:'Sahkan',pwdMis:'Tidak sepadan',pwdOk:'Berjaya!',pwdFail:'Gagal'}};
+var TXT={zh:{noSubj:'你没有被分配任何科目。请联系班主任。',sid:'学号',gender:'性别',male:'男',female:'女',hostY:'🏠寄宿',hostN:'🚶通勤',sib:'兄妹',ph:'输入评语...',search:'🔍 搜索...',export:'📥 导出CSV',done:'已完成',pend:'未完成',total:'学生',chpwd:'修改密码',cancel:'取消',save:'保存',oldPwd:'原密码',newPwd:'新密码',cfmPwd:'确认新密码',pwdMis:'两次密码不一致',pwdOk:'密码修改成功！',pwdFail:'修改失败',loadFail:'❌ 无法加载数据，请检查网络后刷新'},en:{noSubj:'No subjects assigned. Contact form teacher.',sid:'ID',gender:'Gender',male:'Male',female:'Female',hostY:'🏠 Boarder',hostN:'🚶 Commuter',sib:'Siblings',ph:'Enter comment...',search:'🔍 Search...',export:'📥 Export CSV',done:'Done',pend:'Pending',total:'students',chpwd:'Change Password',cancel:'Cancel',save:'Save',oldPwd:'Current',newPwd:'New',cfmPwd:'Confirm',pwdMis:'Passwords do not match',pwdOk:'Password changed!',pwdFail:'Change failed',loadFail:'❌ Failed to load data. Check network & refresh'},ms:{noSubj:'Tiada subjek. Hubungi guru kelas.',sid:'ID',gender:'Jantina',male:'Lelaki',female:'Perempuan',hostY:'🏠 Asrama',hostN:'🚶 Ulang-alik',sib:'Adik-beradik',ph:'Tulis ulasan...',search:'🔍 Cari...',export:'📥 Eksport CSV',done:'Selesai',pend:'Belum',total:'pelajar',chpwd:'Tukar Kata Laluan',cancel:'Batal',save:'Simpan',oldPwd:'Lama',newPwd:'Baru',cfmPwd:'Sahkan',pwdMis:'Tidak sepadan',pwdOk:'Berjaya!',pwdFail:'Gagal',loadFail:'❌ Gagal memuat data. Sila semak rangkaian'}};
 function t(k){return(TXT[LANG]&&TXT[LANG][k])||TXT.zh[k]||k}
-function setLang(l){LANG=l;localStorage.setItem('report_lang',l);['zh','en','ms'].forEach(function(x){var b=document.getElementById('l'+x[0]);if(b){b.classList.toggle('active',x===l)}});document.title='华联中学 - '+(l==='en'?'Reports':l==='ms'?'Laporan':'学生评语');if(typeof renderTabs==='function'){renderTabs();render()}}
-(function(){var sl=localStorage.getItem('report_lang');if(sl){setLang(sl)}else{setLang('zh')}})();
 
 // Auth
 function getT(){return sessionStorage.getItem('report_token')||localStorage.getItem('report_token')}
 function getU(){try{return JSON.parse(sessionStorage.getItem('report_user')||localStorage.getItem('report_user')||'null')}catch(e){return null}}
 function logout(){sessionStorage.clear();localStorage.removeItem('report_token');localStorage.removeItem('report_user');window.location.href='teacher-login.html'}
 
-// Config
-function loadCfg(){return new Promise(function(resolve){if(CFG)return resolve(CFG);fetch('class-config.json').then(function(r){return r.json()}).then(function(c){CFG=c;resolve(c)}).catch(function(){CFG={subjects:[],teachers:[],students:[],currentAcademicYear:'2026'};resolve(CFG)})})}
-function activeStudents(y){var yr=y||(CFG&&CFG.currentAcademicYear)||'2026';return(CFG.students||[]).filter(function(s){return s.academicYear===yr&&s.status==='active'})}
+// Config — fetch with cache-bust for reliability
+function loadCfg(){return new Promise(function(resolve,reject){if(CFG)return resolve(CFG);console.log('[report] Fetching class-config.json...');fetch('class-config.json').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(c){console.log('[report] Config OK:',c.students.length+' students,',c.subjects.length+' subjects');CFG=c;resolve(c)}).catch(function(e){console.error('[report] Config FAILED:',e.message);CFG=null;reject(e)})})}
+function activeStudents(y){var yr=y||(CFG&&CFG.currentAcademicYear)||'2026';return(CFG&&CFG.students||[]).filter(function(s){return s.academicYear===yr&&s.status==='active'})}
 function loadReport(yr,sid,code){var k='r_'+yr+'_'+sid+'_'+code;try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function saveReport(yr,sid,code,fb,ok){var k='r_'+yr+'_'+sid+'_'+code;localStorage.setItem(k,JSON.stringify({feedback:fb,isComplete:ok?1:0,ts:new Date().toISOString()}))}
 
 // Init
 (function(){
-var u=getU();if(!u||!getT()){window.location.href='teacher-login.html';return}
+console.log('[report] Init v2 start');
+var u=getU();console.log('[report] User:',u?u.username:'null','role:',u?u.role:'null','token:',getT()?'yes':'no');
+if(!u||!getT()){console.log('[report] No auth → redirect to login');window.location.href='teacher-login.html';return}
 document.getElementById('ub').textContent=u.display_name||u.username;
 if(u.role==='form_teacher')document.getElementById('nd').style.display='';
 
 loadCfg().then(function(cfg){
+try{
+console.log('[report] Processing...');
 var yr=cfg.currentAcademicYear||'2026';
 var active=activeStudents(yr);
+console.log('[report] Year='+yr+' Active='+active.length);
+
 var tSubs;
 if(u.role==='form_teacher'){tSubs=cfg.subjects||[]}
 else{var tc=(cfg.teachers||[]).find(function(t){return t.username===u.username});var codes=tc?tc.subjects:[];tSubs=(cfg.subjects||[]).filter(function(s){return codes.indexOf('*')>=0||codes.indexOf(s.code)>=0})}
+console.log('[report] Subjects='+tSubs.length);
 
 SUBS=tSubs.map(function(sub){return{code:sub.code,name:sub.name,name_en:sub.name_en||sub.name,name_ms:sub.name_ms||sub.name,emoji:sub.emoji||'',students:active.map(function(st){var sv=loadReport(yr,st.studentId,sub.code);return{sid:st.studentId,sno:st.studentNo,nameZh:st.nameZh,nameEn:st.nameEn,gender:st.gender,hostel:st.hostel,photo:st.photo||('photos/'+st.studentId+'.jpg'),studentPhone:st.studentPhone||'',fatherPhone:st.fatherPhone||'',motherPhone:st.motherPhone||'',address:st.address||'',siblings:st.siblings||'',feedback:sv?sv.feedback:'',isComplete:sv?sv.isComplete:0}})})});
 
 if(SUBS.length===0){document.getElementById('rows').innerHTML='<p style="text-align:center;padding:3rem;color:#9ca3af">'+t('noSubj')+'</p>';return}
+console.log('[report] Rendering...');
 renderTabs();selectSub(0);
+console.log('[report] Init OK');
+}catch(e){console.error('[report] Error:',e);document.getElementById('rows').innerHTML='<p style="text-align:center;padding:3rem;color:#dc2626">❌ '+escHtml(e.message)+'<br><small>请刷新重试 / Refresh to retry</small></p>'}
+}).catch(function(e){
+console.error('[report] Load failed:',e);
+document.getElementById('rows').innerHTML='<p style="text-align:center;padding:3rem;color:#dc2626">'+t('loadFail')+'<br><small>'+escHtml(e.message||'')+'</small></p>'
 });
 })();
 
+// Lang
+function setLang(l){LANG=l;localStorage.setItem('report_lang',l);['zh','en','ms'].forEach(function(x){var b=document.getElementById('l'+x[0]);if(b){b.classList.toggle('active',x===l)}});document.title='华联中学 - '+(l==='en'?'Reports':l==='ms'?'Laporan':'学生评语');if(SUBS.length>0){renderTabs();render()}}
+(function(){var sl=localStorage.getItem('report_lang');if(sl){setLang(sl)}else{setLang('zh')}})();
+
 // Render
 function renderTabs(){
+if(SUBS.length===0)return;
 if(SUBS.length===1){
 var s=SUBS[0],nm=s.name;if(LANG==='en')nm=s.name_en;if(LANG==='ms')nm=s.name_ms;
 document.getElementById('tabs').innerHTML='<h3 style="margin:0">'+s.emoji+' '+nm+'</h3>';return
@@ -128,7 +144,7 @@ document.getElementById('tabs').innerHTML='<h3 style="margin:0">'+s.emoji+' '+nm
 document.getElementById('tabs').innerHTML=SUBS.map(function(s,i){
 var nm=s.name;if(LANG==='en')nm=s.name_en;if(LANG==='ms')nm=s.name_ms;
 var dn=s.students.filter(function(st){return st.isComplete===1}).length;
-return'<span class="subj-tab" onclick="selectSub('+i+')" id="tb'+i+'">'+s.emoji+' '+nm+' <small>'+dn+'/'+s.students.length+'</small></span>'
+return '<span class="subj-tab" onclick="selectSub('+i+')" id="tb'+i+'">'+s.emoji+' '+nm+' <small>'+dn+'/'+s.students.length+'</small></span>'
 }).join('')
 }
 function selectSub(i){curSub=i;var tabs=document.querySelectorAll('.subj-tab');for(var j=0;j<tabs.length;j++){tabs[j].classList.toggle('on',j===i)}render()}
