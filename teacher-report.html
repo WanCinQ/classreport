@@ -75,9 +75,9 @@ function t(k){const lang=gl();return (I18N[lang]&&I18N[lang][k])||I18N.zh[k]||k}
 function updateLangUI(){const lang=gl();['zh','en','ms'].forEach(l=>{const b=document.getElementById('l'+l[0]);if(b)b.classList.toggle('active',l===lang)});document.title='华联中学 - '+(lang==='en'?'Reports':lang==='ms'?'Laporan':'学生评语')}
 
 // --- AUTH ---
-function getT(){return sessionStorage.getItem('rt')||localStorage.getItem('rt')}
-function getU(){try{return JSON.parse(sessionStorage.getItem('ru')||localStorage.getItem('ru')||'null')}catch(e){return null}}
-function logout(){sessionStorage.clear();localStorage.removeItem('rt');localStorage.removeItem('ru');window.location.href='teacher-login.html'}
+function getT(){return sessionStorage.getItem('report_token')||localStorage.getItem('report_token')}
+function getU(){try{return JSON.parse(sessionStorage.getItem('report_user')||localStorage.getItem('report_user')||'null')}catch(e){return null}}
+function logout(){sessionStorage.clear();localStorage.removeItem('report_token');localStorage.removeItem('report_user');window.location.href='teacher-login.html'}
 
 // --- DATA ---
 let CFG=null;
